@@ -1,0 +1,32 @@
+<launch>
+
+    <arg name="test"   default="true"/>
+
+    <group ns="detect_yellow">
+        <node pkg="ros_cutball" name="detect_yellow" type="Detect_Color_node" args="yellow" output="screen"/>
+        <rosparam command="load" file="$(find ros_cutball)/hsv_range.yaml" />
+        <!--参数列表 红球黄球个数（默认红球3个黄球1个) debug模式发布二值化图像，否则不发布 -->
+        <param name="yellow_balloon" value="1"/>
+    </group>
+
+    <group ns="detect_red">
+        <node pkg="ros_cutball" name="detect_red" type="Detect_Color_node" args="red" output="screen"/>
+        <rosparam command="load" file="$(find ros_cutball)/hsv_range.yaml" />
+        <!--参数列表 红球黄球个数（默认红球3个黄球1个) debug模式发布二值化图像，否则不发布 -->
+        <param name="red_balloon" value="3"/>
+    </group>
+
+    <node pkg="rqt_reconfigure" name="rqt_adjust" type="rqt_reconfigure" /> 
+
+    <!--node name="rviz" pkg="rviz" type="rviz" args="~/.rviz/detect_color.rviz"/-->
+    
+    <!--显示多个窗口，要么用rviz要么用image_view这个包-->
+    <group if="$(arg test)">
+        <node name="image_view_yellow" pkg="image_view" type="image_view" args="image:=/image_convert/red"/>
+        <node name="image_view_red" pkg="image_view" type="image_view" args="image:=/image_convert/yellow"/>
+        <node name="imshow" pkg="ros_cutball" type="Imshow" />
+        <node name="image_view_raw" pkg="image_view" type="image_view" args="image:=/image_convert/Imshow"/>
+    <!-- stuff that will only be evaluated if foo is true -->
+    </group>
+
+</launch>
