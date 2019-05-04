@@ -74,6 +74,7 @@ add_message_files(
 ## Generate services in the 'srv' folder
 add_service_files(
   FILES
+  TF.srv
 #   Service1.srv
 #   Service2.srv
 )
