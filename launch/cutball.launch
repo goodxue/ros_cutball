@@ -2,7 +2,8 @@
 
     <arg name="testing_model"          default="true" />
 
-
+    <rosparam command="load" file="$(find ros_cutball)/ros_cutball_param.yaml" />
+    
     <group ns="zed">
         <include file="$(find zed_wrapper)/launch/zed_camera.launch">
         </include>

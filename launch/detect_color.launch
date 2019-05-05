@@ -1,17 +1,15 @@
 <launch>
 
     <arg name="test"   default="true"/>
-
+    <rosparam command="load" file="$(find ros_cutball)/hsv_range.yaml" />
     <group ns="detect_yellow">
         <node pkg="ros_cutball" name="detect_yellow" type="Detect_Color_node" args="yellow" output="screen"/>
-        <rosparam command="load" file="$(find ros_cutball)/hsv_range.yaml" />
         <!--参数列表 红球黄球个数（默认红球3个黄球1个) debug模式发布二值化图像，否则不发布 -->
         <param name="yellow_balloon" value="1"/>
     </group>
 
     <group ns="detect_red">
         <node pkg="ros_cutball" name="detect_red" type="Detect_Color_node" args="red" output="screen"/>
-        <rosparam command="load" file="$(find ros_cutball)/hsv_range.yaml" />
         <!--参数列表 红球黄球个数（默认红球3个黄球1个) debug模式发布二值化图像，否则不发布 -->
         <param name="red_balloon" value="3"/>
     </group>

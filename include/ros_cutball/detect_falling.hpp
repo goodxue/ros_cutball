@@ -32,10 +32,21 @@ private:
                                      
     //sl::Mat slmat_depth;                                //zed深度图（弃置不用，因为这个节点不需要保存深度图，只需要几个位置的深度信息即可）
     int red_num,yellow_num;                             //查看红色黄色球数量
+    double height;
     std::vector<cv::Rect> vec_rect_red;                 //红色boundingbox
     std::vector<cv::Rect> vec_rect_yellow;              //黄色boundingbox
 
-    std::vector<std::vector<cv::Point2d>> key_pixel;      //二维数组，每个元素是一个要检测的气球需要监测深度的点             
+    std::vector<std::vector<cv::Point2d>> key_pixel;      //二维数组，每个元素是一个要检测的气球需要监测深度的点  
+    int weight_value;               //从中心点向外扩展的像素点值
+    int weight_point_num;           //取点的个数，默认为8
+                                    // ·----·----·
+                                    // |     ↙中心|
+                                    // ·    o    ·
+                                    // |         |
+                                    // ·----·----·
+                                    // ——————   ←---
+                                    //    8
+                                    //weight_value-↑
     void weighted_average_to_key_pixel();                 //返回加权平均值，表示要检测深度的点。数据保存在key_pixel
-
+    bool call_service(int tf_num);
 };
