@@ -23,6 +23,7 @@ find_package(catkin REQUIRED COMPONENTS
 generate_dynamic_reconfigure_options(
   cfg/yellow.cfg
   cfg/red.cfg
+  cfg/black.cfg
 )
 
 find_package(ZED 2 REQUIRED)
@@ -69,6 +70,7 @@ add_message_files(
    FILES
    rect.msg
    rectArray.msg
+   point2d.msg
 )
 
 ## Generate services in the 'srv' folder
@@ -92,7 +94,6 @@ include_directories(${ZED_INCLUDE_DIRS})
 
 ## Generate added messages and services with any dependencies listed here
 generate_messages(
-
   DEPENDENCIES
 #   sensor_msgs   
   std_msgs
@@ -141,9 +142,11 @@ catkin_package(
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
   add_executable(Detect_Color_node src/Detect_Color.cpp src/Detect_Color_node.cpp)
+  add_executable(detect_black_node src/detect_black_node.cpp src/detect_black.cpp)
   add_executable(Imshow src/Imshow.cpp )
   target_link_libraries(Detect_Color_node ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
   target_link_libraries(Imshow ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+  target_link_libraries(detect_black_node ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use

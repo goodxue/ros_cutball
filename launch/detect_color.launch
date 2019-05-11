@@ -14,6 +14,11 @@
         <param name="red_balloon" value="3"/>
     </group>
 
+    <group ns="detect_black">
+        <node pkg="ros_cutball" name="detect_black" type="detect_black_node" args="black" output="screen"/>
+        <!--参数列表 红球黄球个数（默认红球3个黄球1个) debug模式发布二值化图像，否则不发布 -->
+    </group>
+
     <node pkg="rqt_reconfigure" name="rqt_adjust" type="rqt_reconfigure" /> 
 
     <!--node name="rviz" pkg="rviz" type="rviz" args="~/.rviz/detect_color.rviz"/-->
@@ -22,6 +27,7 @@
     <group if="$(arg test)">
         <node name="image_view_yellow" pkg="image_view" type="image_view" args="image:=/image_convert/red"/>
         <node name="image_view_red" pkg="image_view" type="image_view" args="image:=/image_convert/yellow"/>
+        <node name="image_view_black" pkg="image_view" type="image_view" args="image:=/image_convert/black"/>
         <node name="imshow" pkg="ros_cutball" type="Imshow" />
         <node name="image_view_raw" pkg="image_view" type="image_view" args="image:=/image_convert/Imshow"/>
     <!-- stuff that will only be evaluated if foo is true -->

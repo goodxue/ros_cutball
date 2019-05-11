@@ -36,7 +36,7 @@ private:
     std::vector<cv::Rect> vec_rect_red;                 //红色boundingbox
     std::vector<cv::Rect> vec_rect_yellow;              //黄色boundingbox
 
-    std::vector<std::vector<cv::Point2d>> key_pixel;      //二维数组，每个元素是一个要检测的气球需要监测深度的点  
+    std::vector<std::vector<cv::Point2d>> key_pixel_2d;      //二维数组，每个元素是一个要检测的气球需要监测深度的点  
     int weight_value;               //从中心点向外扩展的像素点值
     int weight_point_num;           //取点的个数，默认为8
                                     // ·----·----·
