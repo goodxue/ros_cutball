@@ -34,15 +34,15 @@ private:
                                      
     //sl::Mat slmat_depth;                                //zed深度图（弃置不用，因为这个节点不需要保存深度图，只需要几个位置的深度信息即可）
     int red_num,yellow_num;                             //查看红色黄色球数量
+    int queue_num;                                     //队列最大存储深度的个数,即判断下落时取出首位
     double height;
-<<<<<<< HEAD
     bool test;
     std::vector<cv::Rect> vec_rect_red;                 //红色boundingbox
     std::vector<cv::Rect> vec_rect_yellow;              //黄色boundingbox
 
 
     std::vector<std::vector<cv::Point2d>> red_key_pixel_2d;      //二维数组，每个元素是一个要检测的气球需要监测深度的点  
-
+    std::vector<std::vector<cv::Point2d>> yellow_key_pixel_2d;   //为什么
 
     int weight_value;               //从中心点向外扩展的像素点值
     int weight_point_num;           //取点的个数，默认为(weight_point_num+1)^2 默认为2
@@ -51,14 +51,6 @@ private:
     std::vector<cv::Rect> vec_rect_yellow;              //黄色boundingbox
 
 
-=======
-    std::vector<cv::Rect> vec_rect_red;                 //红色boundingbox
-    std::vector<cv::Rect> vec_rect_yellow;              //黄色boundingbox
-
-    std::vector<std::vector<cv::Point2d>> key_pixel_2d;      //二维数组，每个元素是一个要检测的气球需要监测深度的点  
-    int weight_value;               //从中心点向外扩展的像素点值
-    int weight_point_num;           //取点的个数，默认为8
->>>>>>> e41dbc56f63e28b84978f6853164dd2a10bfc9c1
                                     // ·----·----·
                                     // |     ↙中心|
                                     // ·    o    ·
@@ -67,16 +59,12 @@ private:
                                     // ——————   ←---
                                     //    8
                                     //weight_value-↑
-<<<<<<< HEAD
 
     void weighted_average_to_key_pixel(std::vector<cv::Rect>& rect_vec,std::vector<std::vector<cv::Point2d>>& vec_vec_point);                 //返回加权平均值，表示要检测深度的点。数据保存在key_pixel
     bool call_service(int tf_num);                      //call了service之后，前面的数据需要全部清除并重新初始化，因为气球个数少了
                                                         //TUDO应该需要由节点来执行这个操作，比如说重新建个detect_falling对象
 
-    std::vector<std::queue<float> > depth_queue_vec;       //队列的顺序由标号决定，这就要求了一次下落之间时候，颜色检测时的气球相对顺序不要变
-
-=======
-    void weighted_average_to_key_pixel();                 //返回加权平均值，表示要检测深度的点。数据保存在key_pixel
-    bool call_service(int tf_num);
->>>>>>> e41dbc56f63e28b84978f6853164dd2a10bfc9c1
+    std::vector<std::queue<float> > red_depth_queue_vec;       //队列的顺序由标号决定，这就要求了一次下落之间时候，颜色检测时的气球相对顺序不要变
+    std::vector<std::queue<float> > yellow_depth_queue_vec;
+    void depth_push_into_queue(std::queue<float>& depth_queue,float depth);
 };

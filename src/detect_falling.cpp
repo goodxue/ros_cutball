@@ -8,11 +8,13 @@ detect_falling::detect_falling(std::string parameter):it_(nh_) {
     srv_tf = nh_.serviceClient<ros_cutball::TF>("ball_falling");
 
     //初始化一些用于保存坐标点的vector
+    //参数服务器获取超参数
     nh_.getParam("red_balloon",red_num);
     nh_.getParam("yellow_balloon",yellow_num);
     nh_.getParam("weight_value",weight_value);
     nh_.getParam("weight_point_num",weight_point_num);
-<<<<<<< HEAD
+    nh_.getParam("queue_num",queue_num);
+
     if (parameter == std::string("test")) {
         test = true;
         if (red_num > 0) {
@@ -23,12 +25,9 @@ detect_falling::detect_falling(std::string parameter):it_(nh_) {
         }
     } else {
         test = false;
-=======
-    if (red_num > 0) {
-        vec_rect_red.resize(red_num);
->>>>>>> e41dbc56f63e28b84978f6853164dd2a10bfc9c1
     }
-    depth_queue_vec.resize(red_num+yellow_num);
+    red_depth_queue_vec.resize(red_num+yellow_num);
+    yellow_depth_queue_vec.resize(red_num+yellow_num);
 }
 
 //直接订阅深度图像，然后利用它的ptr直接读数据就行（因为不需要修改，所以不使用cv_bridge)
@@ -51,15 +50,26 @@ void detect_falling::depthCallback(const sensor_msgs::Image::ConstPtr& msg) {
         ROS_INFO("Center distance : %g m", depths[centerIdx]);
     }
     else {
-        float* depths = (float*)(&msg->data[0]);
+        float* depths = (float*)(&msg->data[0]);                    //图像变为一位的全连接
+        //红球深度装入队列
         for (int i = 0;i < red_key_pixel_2d.size();i++) {
             float all_sum = 0; //深度之和
             for (int j = 0;j < red_key_pixel_2d[i].size();j++) {
-                int u = red_key_pixel_2d[i][j].x;
-                int v = msg->width * red_key_pixel_2d[i][j].y;
+                int u = red_key_pixel_2d[i][j].x;                   //横坐标
+                int v = msg->width * red_key_pixel_2d[i][j].y;      //纵坐标的所在的行
                 all_sum += depths[u+v];
             }
-
+            depth_push_into_queue(red_depth_queue_vec[i],all_sum/red_key_pixel_2d[i].size());     //all_sum除以这个向量point的个数，即平均值
+        }
+        //黄球深度装入队列
+        for (int i = 0;i < yellow_key_pixel_2d.size();i++) {
+            float all_sum = 0; //深度之和
+            for (int j = 0;j < yellow_key_pixel_2d[i].size();j++) {
+                int u = yellow_key_pixel_2d[i][j].x;                   //横坐标
+                int v = msg->width * yellow_key_pixel_2d[i][j].y;      //纵坐标的所在的行
+                all_sum += depths[u+v];
+            }
+            depth_push_into_queue(yellow_depth_queue_vec[i],all_sum/yellow_key_pixel_2d[i].size());     //all_sum除以这个向量point的个数，即平均值
         }
 
     }
@@ -78,11 +88,7 @@ void detect_falling::update_rect_red(const ros_cutball::rectArray::ConstPtr& msg
 }
 
 
-<<<<<<< HEAD
 void detect_falling::update_rect_yellow(const ros_cutball::rectArray::ConstPtr& msg) {
-=======
-void detect_falling::update_rect_red(const ros_cutball::rectArray::ConstPtr& msg) {
->>>>>>> e41dbc56f63e28b84978f6853164dd2a10bfc9c1
     vec_rect_yellow.resize(msg->rectarray.size());               //预分配大小，使用stl的vector一定要小心越界
     for (int i=0; i < msg->rectarray.size(); ++i)
     {
@@ -99,7 +105,6 @@ void detect_falling::update_height(const std_msgs::Float64 Heights) {
     height = Heights.data;
 }
 
-<<<<<<< HEAD
 
 
 void detect_falling::update_rect_red(const ros_cutball::rectArray::ConstPtr& msg) {
@@ -120,8 +125,6 @@ void detect_falling::update_height(const std_msgs::Float64 Heights) {
 }
 
 
-=======
->>>>>>> e41dbc56f63e28b84978f6853164dd2a10bfc9c1
 //气球下落，向客户端发送请求的函数封装，当请求发出后，程序即暂停在这里等待服务端回应：
 //当飞机先跑到提前设定的象限的定点后，然后根据黑圆坐标判断返回原点后再向客户端发送成功
 //信息，然后检测下落的程序才开始继续。
@@ -148,7 +151,6 @@ bool detect_falling::call_service(int tf_num) {
 }
 
 
-<<<<<<< HEAD
 void detect_falling::weighted_average_to_key_pixel(std::vector<cv::Rect>& rect_vec,std::vector<std::vector<cv::Point2d>>& vec_vec_point) {
     vec_vec_point.resize(red_num+yellow_num);           //将二维数组先分配空间
     for (int i = 0;i < rect_vec.size();i++) {
@@ -160,11 +162,16 @@ void detect_falling::weighted_average_to_key_pixel(std::vector<cv::Rect>& rect_v
                 vec_vec_point[i][j] = cv::Point2d(tempx+j*weight_value+k*weight_value,tempy+j*weight_value+k*weight_value);      //TUDO 将待检测八个点放进二维数组中，判断下红黄球顺序这种问题
             }
         }
-=======
-void detect_falling::weighted_average_to_key_pixel() {
-    key_pixel.resize(red_num+yellow_num);
-    for (int i = 0;i < vec_rect_red.size();i++) {
+    }
+}
 
->>>>>>> e41dbc56f63e28b84978f6853164dd2a10bfc9c1
+
+void detect_falling::depth_push_into_queue(std::queue<float>& depth_queue,float depth) {
+    if (depth_queue.size()>queue_num) {
+        depth_queue.pop();
+        depth_queue.push(depth);
+    }
+    else {
+        depth_queue.push(depth);
     }
 }
