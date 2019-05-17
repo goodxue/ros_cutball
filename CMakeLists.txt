@@ -144,6 +144,7 @@ catkin_package(
   add_executable(Detect_Color_node src/Detect_Color.cpp src/Detect_Color_node.cpp)
   add_executable(detect_black_node src/detect_black_node.cpp src/detect_black.cpp)
   add_executable(Imshow src/Imshow.cpp )
+  add_executable(detect_falling src/detect_falling.cpp)
   target_link_libraries(Detect_Color_node ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
   target_link_libraries(Imshow ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
   target_link_libraries(detect_black_node ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
