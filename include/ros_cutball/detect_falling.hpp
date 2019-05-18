@@ -35,7 +35,8 @@ private:
     //sl::Mat slmat_depth;                                //zed深度图（弃置不用，因为这个节点不需要保存深度图，只需要几个位置的深度信息即可）
     int red_num,yellow_num;                             //查看红色黄色球数量
     int queue_num;                                     //队列最大存储深度的个数,即判断下落时取出首位
-    double height;
+    //double height;
+    double falling_threshold;                           //一定时间段内气球相对地面移动的距离阈值，超过即掉落
     bool test;
     std::vector<cv::Rect> vec_rect_red;                 //红色boundingbox
     std::vector<cv::Rect> vec_rect_yellow;              //黄色boundingbox
@@ -46,11 +47,6 @@ private:
 
     int weight_value;               //从中心点向外扩展的像素点值
     int weight_point_num;           //取点的个数，默认为(weight_point_num+1)^2 默认为2
-
-    std::vector<cv::Rect> vec_rect_red;                 //红色boundingbox
-    std::vector<cv::Rect> vec_rect_yellow;              //黄色boundingbox
-
-
                                     // ·----·----·
                                     // |     ↙中心|
                                     // ·    o    ·
@@ -66,5 +62,7 @@ private:
 
     std::vector<std::queue<float> > red_depth_queue_vec;       //队列的顺序由标号决定，这就要求了一次下落之间时候，颜色检测时的气球相对顺序不要变
     std::vector<std::queue<float> > yellow_depth_queue_vec;
+    std::queue<double> height_queue;
     void depth_push_into_queue(std::queue<float>& depth_queue,float depth);
+    bool check_falling();
 };

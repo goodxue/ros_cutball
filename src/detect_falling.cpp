@@ -5,7 +5,7 @@ detect_falling::detect_falling(std::string parameter):it_(nh_) {
     sub_rectarray_yellow = nh_.subscribe("/detect_color/detect_yellow/Detect_Color/rect/yellow", 1,&detect_falling::update_rect_yellow, this);
     sub_height = nh_.subscribe("xdd_z",1,&detect_falling::update_height,this);
     depth_sub_ = it_.subscribe("/zed/depth/depth_registered", 1,&detect_falling::depthCallback,this);
-    srv_tf = nh_.serviceClient<ros_cutball::TF>("ball_falling");
+    srv_tf = nh_.serviceClient<ros_cutball::TF>("balloon_falling");
 
     //初始化一些用于保存坐标点的vector
     //参数服务器获取超参数
@@ -29,6 +29,12 @@ detect_falling::detect_falling(std::string parameter):it_(nh_) {
     red_depth_queue_vec.resize(red_num+yellow_num);
     yellow_depth_queue_vec.resize(red_num+yellow_num);
 }
+
+
+bool detect_falling::start() {
+    
+}
+
 
 //直接订阅深度图像，然后利用它的ptr直接读数据就行（因为不需要修改，所以不使用cv_bridge)
 //读取的目标点来自key_pixel_2d
@@ -102,27 +108,15 @@ void detect_falling::update_rect_yellow(const ros_cutball::rectArray::ConstPtr& 
 
 //飞机发布的高度信息，回调函数更改内部的height值。
 void detect_falling::update_height(const std_msgs::Float64 Heights) {
-    height = Heights.data;
-}
-
-
-
-void detect_falling::update_rect_red(const ros_cutball::rectArray::ConstPtr& msg) {
-    vec_rect_yellow.resize(msg->rectarray.size());               //预分配大小，使用stl的vector一定要小心越界
-    for (int i=0; i < msg->rectarray.size(); ++i)
-    {
-        vec_rect_yellow[i].x = msg->rectarray[i].x;
-        vec_rect_yellow[i].y = msg->rectarray[i].y;
-        vec_rect_yellow[i].width = msg->rectarray[i].width;
-        vec_rect_yellow[i].height = msg->rectarray[i].height;
-        //vec_rect_yellow[i] = rect_temp;
+    if (height_queue.size() >= queue_num) {
+        height_queue.pop();
+        height_queue.push(Heights.data);
+    }
+    else {
+        height_queue.push(Heights.data);
     }
 }
 
-//飞机发布的高度信息，回调函数更改内部的height值。
-void detect_falling::update_height(const std_msgs::Float64 Heights) {
-    height = Heights.data;
-}
 
 
 //气球下落，向客户端发送请求的函数封装，当请求发出后，程序即暂停在这里等待服务端回应：
@@ -174,4 +168,18 @@ void detect_falling::depth_push_into_queue(std::queue<float>& depth_queue,float 
     else {
         depth_queue.push(depth);
     }
+}
+
+
+
+bool detect_falling::check_falling() {
+    for (int i = 0;i < red_depth_queue_vec.size();i++) {
+        double difference;
+        //气球绝对高度差的变化，气球相对相机的距离变化，减去飞机相对地面的距离变化
+        difference = abs(red_depth_queue_vec[i].front() - red_depth_queue_vec[i].back())-abs(height_queue.front()-height_queue.back());
+        if (difference > falling_threshold) {
+            //计算出红球的象限，然后调用服务
+        }
+    }
+    //接着写黄球的掉落检测
 }
