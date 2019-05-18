@@ -9,6 +9,7 @@
 //#include <sensor_msgs/Image.h>                  //深度图像订阅类型
 #include <vector>
 #include <queue>
+#include <map>
 
 class detect_falling {
 public:
@@ -31,7 +32,7 @@ private:
     void update_height(const std_msgs::Float64 Heights);                        //更新飞机当前高度
     void depthCallback(const sensor_msgs::Image::ConstPtr& msg);                //深度图的订阅
 
-                                     
+    bool reinitialize();                                
     //sl::Mat slmat_depth;                                //zed深度图（弃置不用，因为这个节点不需要保存深度图，只需要几个位置的深度信息即可）
     int red_num,yellow_num;                             //查看红色黄色球数量
     int queue_num;                                     //队列最大存储深度的个数,即判断下落时取出首位
@@ -65,4 +66,11 @@ private:
     std::queue<double> height_queue;
     void depth_push_into_queue(std::queue<float>& depth_queue,float depth);
     bool check_falling();
+    int calculate_tf(cv::Rect object);
+
+    std::map<int,bool> tf_call;     //这个东西是用来判断某个象限的气球是否掉落用的，黄色掉落也一样如实记录，只是判断函数的输出输出相反象限。
+
 };
+
+    bool comp_rect_y(cv::Rect& rect1,cv::Rect& rect2);
+    bool comp_rect_x(cv::Rect& rect1,cv::Rect& rect2);

@@ -28,6 +28,11 @@ detect_falling::detect_falling(std::string parameter):it_(nh_) {
     }
     red_depth_queue_vec.resize(red_num+yellow_num);
     yellow_depth_queue_vec.resize(red_num+yellow_num);
+
+    tf_call[1] = false;
+    tf_call[2] = false;
+    tf_call[3] = false;
+    tf_call[4] = false;
 }
 
 
@@ -171,7 +176,10 @@ void detect_falling::depth_push_into_queue(std::queue<float>& depth_queue,float 
 }
 
 
-
+//  暂定象限为        1
+//            2           3
+//                  4
+//注意检测颜色时发布的气球顺序是y值由大到小，即y最大的在第四象限
 bool detect_falling::check_falling() {
     for (int i = 0;i < red_depth_queue_vec.size();i++) {
         double difference;
@@ -179,7 +187,105 @@ bool detect_falling::check_falling() {
         difference = abs(red_depth_queue_vec[i].front() - red_depth_queue_vec[i].back())-abs(height_queue.front()-height_queue.back());
         if (difference > falling_threshold) {
             //计算出红球的象限，然后调用服务
+            ros_cutball::TF tf;
+            tf.request.tf = calculate_tf(vec_rect_red[i]);
+            if(srv_tf.call(tf)) {
+                reinitialize();                     //重新开启检测下落节点
+            }
+            else {
+                ROS_ERROR("in detect_falling::check_falling: service returned false, fatel error occured");
+                return false;
+            }
         }
     }
     //接着写黄球的掉落检测
+    for (int i = 0;i < yellow_depth_queue_vec.size();i++) {
+        double difference;
+        //气球绝对高度差的变化，气球相对相机的距离变化，减去飞机相对地面的距离变化
+        difference = abs(yellow_depth_queue_vec[i].front() - yellow_depth_queue_vec[i].back())-abs(height_queue.front()-height_queue.back());
+        if (difference > falling_threshold) {
+            //计算出红球的象限，然后调用服务
+            ros_cutball::TF tf;
+            int tf_temp = calculate_tf(vec_rect_yellow[i]);
+            switch(tf_temp) {               //象限反向
+                case 1: tf.request.tf = 4;
+                        break;
+                case 2: tf.request.tf = 3;
+                        break;
+                case 3: tf.request.tf = 2;
+                        break;
+                case 4: tf.request.tf = 1;
+                        break; 
+            }
+            if(srv_tf.call(tf)) {
+                reinitialize();                     //重新开启检测下落节点
+            }
+            else {
+                ROS_ERROR("in detect_falling::check_falling: service returned false, fatel error occured");
+                return false;
+            }
+        }
+    }
+}
+
+//输入一个点的坐标，先判断是不是最上或最下，再判断是不是最左或最右
+int detect_falling::calculate_tf(cv::Rect object) {
+    
+    std::vector<cv::Rect> four_rect;
+    for (int i=0;i < vec_rect_red.size();i++) {
+        four_rect.push_back(vec_rect_red[i]);
+    }
+    for (int i=0;i < vec_rect_yellow.size();i++) {
+        four_rect.push_back(vec_rect_yellow[i]);
+    }
+    while (four_rect.size() < 4) {          //确保里面有四个，这样才便于划分象限
+        four_rect.push_back(cv::Rect());
+    }
+
+    std::sort(four_rect.begin(),four_rect.end(),comp_rect_x);
+    if ((*four_rect.begin()) == object && (!tf_call[3])) {
+        tf_call[3] = true;
+        return 3;
+    }
+    else if ((*four_rect.end()) == object && (!tf_call[2])) {
+        tf_call[2] = true;
+        return 2;
+    }
+    else {
+        std::sort(four_rect.begin(),four_rect.end(),comp_rect_y);
+        if ((*four_rect.begin()) == object && (!tf_call[4])) {
+            tf_call[4] = true;
+            return 4;
+        }
+        else if ((*four_rect.end()) == object && (!tf_call[1])) {
+            tf_call[1] = true;
+            return 1;
+        }
+        else {
+            ROS_INFO("an error occurs in calculate_tf(), where object has no tf number!");
+        }
+    }
+    
+}
+
+
+bool comp_rect_y(cv::Rect& rect1,cv::Rect& rect2) {
+    return rect1.y > rect2.y;
+}
+
+bool comp_rect_x(cv::Rect& rect1,cv::Rect& rect2) {
+    return rect1.x > rect2.x;
+}
+
+//很大可能出问题,先马上
+bool detect_falling::reinitialize() {
+    nh_.getParam("red_balloon",red_num);
+    nh_.getParam("yellow_balloon",yellow_num);
+    nh_.getParam("weight_value",weight_value);
+    nh_.getParam("weight_point_num",weight_point_num);
+    nh_.getParam("queue_num",queue_num);
+    red_depth_queue_vec.clear();
+    yellow_depth_queue_vec.clear();
+    red_depth_queue_vec.resize(red_num+yellow_num);
+    yellow_depth_queue_vec.resize(red_num+yellow_num);
 }
