@@ -1,13 +1,7 @@
 red_balloon: 1
 yellow_balloon: 1
-
 weight_value: 10
-<<<<<<< HEAD
-<<<<<<< HEAD
 weight_point_num: 2
-=======
-weight_point_num: 8
->>>>>>> e41dbc56f63e28b84978f6853164dd2a10bfc9c1
-=======
-weight_point_num: 8
->>>>>>> e41dbc56f63e28b84978f6853164dd2a10bfc9c1
+queue_num: 10
+
+

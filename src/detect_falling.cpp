@@ -6,7 +6,7 @@ detect_falling::detect_falling(std::string parameter):it_(nh_) {
     sub_height = nh_.subscribe("xdd_z",1,&detect_falling::update_height,this);
     depth_sub_ = it_.subscribe("/zed/depth/depth_registered", 1,&detect_falling::depthCallback,this);
     srv_tf = nh_.serviceClient<ros_cutball::TF>("balloon_falling");
-
+    srv_check = nh_.advertiseService("trigger",&detect_falling::checking_trigger,this);
     //初始化一些用于保存坐标点的vector
     //参数服务器获取超参数
     nh_.getParam("red_balloon",red_num);
@@ -33,11 +33,20 @@ detect_falling::detect_falling(std::string parameter):it_(nh_) {
     tf_call[2] = false;
     tf_call[3] = false;
     tf_call[4] = false;
+    time_decay = 0;
+    start_checking = false;
 }
 
 
 bool detect_falling::start() {
-    
+    if (start_checking) {
+        if (check_falling()) {
+            return true;
+        }
+    }
+    else {
+        return false;
+    }
 }
 
 
@@ -61,6 +70,9 @@ void detect_falling::depthCallback(const sensor_msgs::Image::ConstPtr& msg) {
         ROS_INFO("Center distance : %g m", depths[centerIdx]);
     }
     else {
+        //将关键点放进数组
+        weighted_average_to_key_pixel(vec_rect_red,red_key_pixel_2d);
+
         float* depths = (float*)(&msg->data[0]);                    //图像变为一位的全连接
         //红球深度装入队列
         for (int i = 0;i < red_key_pixel_2d.size();i++) {
@@ -72,6 +84,8 @@ void detect_falling::depthCallback(const sensor_msgs::Image::ConstPtr& msg) {
             }
             depth_push_into_queue(red_depth_queue_vec[i],all_sum/red_key_pixel_2d[i].size());     //all_sum除以这个向量point的个数，即平均值
         }
+        weighted_average_to_key_pixel(vec_rect_yellow,yellow_key_pixel_2d);
+
         //黄球深度装入队列
         for (int i = 0;i < yellow_key_pixel_2d.size();i++) {
             float all_sum = 0; //深度之和
@@ -137,8 +151,8 @@ bool detect_falling::call_service(int tf_num) {
 
         }
         else {
-            ROS_INFO("fatel error occurs: server returned a false state for %s",tf.response.message);
-            ROS_INFO("shutting down the detect_falling node");
+            ROS_FATAL("fatel error occurs: server returned a false state for: %s",tf.response.message.data());
+            ROS_FATAL("shutting down the detect_falling node");
             ros::shutdown();
         }
     }
@@ -288,4 +302,13 @@ bool detect_falling::reinitialize() {
     yellow_depth_queue_vec.clear();
     red_depth_queue_vec.resize(red_num+yellow_num);
     yellow_depth_queue_vec.resize(red_num+yellow_num);
+    start_checking = false;                             //注意要将开始下落检测设置为false
+    time_decay = 0;
+}
+
+//服务扳机的回调函数，将布尔值取反
+bool detect_falling::checking_trigger(std_srvs::Trigger::Request& req,std_srvs::Trigger::Response& res) {
+    start_checking = !start_checking;
+    res.success = true;
+    return true;
 }
