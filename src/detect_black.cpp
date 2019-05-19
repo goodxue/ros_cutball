@@ -1,5 +1,8 @@
 #include "detect_black.hpp"
-
+bool comp_area(cv::Rect& Rect1,cv::Rect& Rect2)
+{
+    return Rect1.area() > Rect2.area();
+}
 detect_black::detect_black():it_(nh_){
 
     image_sub_ = it_.subscribe("/zed/rgb/image_raw_color", 1,&detect_black::updateImage, this);
@@ -10,7 +13,7 @@ detect_black::detect_black():it_(nh_){
     //dynamic_reconfigure::Server<ros_cutball::hsv_Config> server;
     
     //server.setCallback(f);
-    point_pub = nh_.advertise<ros_cutball::point2d>(std::string("Detect_Color/black_point"),10);
+    point_pub = nh_.advertise<ros_cutball::point2i>(std::string("Detect_Color/black_point"),10);
     nh_.getParam(std::string("threshold"),threshold);
     //cv::namedWindow("test");
 }
@@ -51,7 +54,7 @@ void detect_black::start() {
     {
         rectangles.push_back(cv::boundingRect(convexHulls[i]));//框选住的矩形框，在使用气球大小时最好不使用。TODO
     }
-    
+    std::sort(rectangles.begin(),rectangles.end(),comp_area);
     if (rectangles.empty()) {
         outpoint.x = -1;
         outpoint.y = -1;
@@ -89,7 +92,7 @@ void detect_black::Proc_Img(cv::Mat& thresh)
 
 
 void detect_black::data_pub() {
-    ros_cutball::point2d point;
+    ros_cutball::point2i point;
     point.x = outpoint.x;
     point.y = outpoint.y;
     point_pub.publish(point);

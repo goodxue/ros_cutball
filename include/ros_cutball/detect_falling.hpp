@@ -47,8 +47,8 @@ private:
     std::vector<cv::Rect> vec_rect_yellow;              //黄色boundingbox
 
 
-    std::vector<std::vector<cv::Point2d>> red_key_pixel_2d;      //二维数组，每个元素是一个要检测的气球需要监测深度的点  
-    std::vector<std::vector<cv::Point2d>> yellow_key_pixel_2d;   //为什么
+    std::vector<std::vector<cv::Point2i>> red_key_pixel_2d;      //二维数组，每个元素是一个要检测的气球需要监测深度的点  
+    std::vector<std::vector<cv::Point2i>> yellow_key_pixel_2d;   //为什么
 
     int weight_value;               //从中心点向外扩展的像素点值
     int weight_point_num;           //取点的个数，默认为(weight_point_num+1)^2 默认为2
@@ -61,7 +61,7 @@ private:
                                     //    8
                                     //weight_value-↑
 
-    void weighted_average_to_key_pixel(std::vector<cv::Rect>& rect_vec,std::vector<std::vector<cv::Point2d>>& vec_vec_point);                 //返回加权平均值，表示要检测深度的点。数据保存在key_pixel
+    void weighted_average_to_key_pixel(std::vector<cv::Rect>& rect_vec,std::vector<std::vector<cv::Point2i>>& vec_vec_point);                 //返回加权平均值，表示要检测深度的点。数据保存在key_pixel
     bool call_service(int tf_num);                      //call了service之后，前面的数据需要全部清除并重新初始化，因为气球个数少了
                                                         //TUDO应该需要由节点来执行这个操作，比如说重新建个detect_falling对象
     bool checking_trigger(std_srvs::Trigger::Request& req,std_srvs::Trigger::Response& res);

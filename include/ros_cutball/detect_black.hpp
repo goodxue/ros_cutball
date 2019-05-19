@@ -5,7 +5,7 @@
 #include <cv_bridge/cv_bridge.h>
 #include <dynamic_reconfigure/server.h>
 #include <ros_cutball/black_threshold_Config.h>
-#include <ros_cutball/point2d.h>                   //自定义消息类型的头文件
+#include <ros_cutball/point2i.h>                   //自定义消息类型的头文件
 #include <string.h>
 
 class detect_black{

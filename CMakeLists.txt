@@ -70,7 +70,7 @@ add_message_files(
    FILES
    rect.msg
    rectArray.msg
-   point2d.msg
+   point2i.msg
 )
 
 ## Generate services in the 'srv' folder

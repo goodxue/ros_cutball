@@ -164,7 +164,7 @@ bool detect_falling::call_service(int tf_num) {
 }
 
 
-void detect_falling::weighted_average_to_key_pixel(std::vector<cv::Rect>& rect_vec,std::vector<std::vector<cv::Point2d>>& vec_vec_point) {
+void detect_falling::weighted_average_to_key_pixel(std::vector<cv::Rect>& rect_vec,std::vector<std::vector<cv::Point2i>>& vec_vec_point) {
     vec_vec_point.resize(red_num+yellow_num);           //将二维数组先分配空间
     for (int i = 0;i < rect_vec.size();i++) {
         int tempx = rect_vec[i].x;          //左上角坐标点
@@ -172,7 +172,7 @@ void detect_falling::weighted_average_to_key_pixel(std::vector<cv::Rect>& rect_v
         vec_vec_point[i].resize((weight_point_num+1)*(weight_point_num+1));
         for (int j = 0;j < weight_point_num;j++) {
             for (int k = 0;k < weight_point_num;k++) {
-                vec_vec_point[i][j] = cv::Point2d(tempx+j*weight_value+k*weight_value,tempy+j*weight_value+k*weight_value);      //TUDO 将待检测八个点放进二维数组中，判断下红黄球顺序这种问题
+                vec_vec_point[i][j] = cv::Point2i(tempx+j*weight_value+k*weight_value,tempy+j*weight_value+k*weight_value);      //TUDO 将待检测八个点放进二维数组中，判断下红黄球顺序这种问题
             }
         }
     }

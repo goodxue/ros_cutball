@@ -4,7 +4,7 @@
 #include <cv_bridge/cv_bridge.h>  
 #include <ros_cutball/rect.h>                   //自定义消息类型的头文件
 #include <ros_cutball/rectArray.h>
-#include <ros_cutball/point2d.h>
+#include <ros_cutball/point2i.h>
 #include <vector>
 
 class imshow{
@@ -21,7 +21,7 @@ private:
 
     std::vector<cv::Rect> vec_rect_red;
     std::vector<cv::Rect> vec_rect_yellow;
-    cv::Point2d point_black;
+    cv::Point point_black;
     cv_bridge::CvImagePtr cv_ptr;
     image_transport::Publisher convert_pub_;
     cv::Rect rect_temp;
@@ -32,7 +32,7 @@ private:
     void imageCallback(const sensor_msgs::ImageConstPtr& msg);
     void rect_array_yellow_callback(const ros_cutball::rectArray::ConstPtr& msg);
     void rect_array_red_callback(const ros_cutball::rectArray::ConstPtr& msg);
-    void point_black_callback(const ros_cutball::point2d::ConstPtr& msg);
+    void point_black_callback(const ros_cutball::point2i::ConstPtr& msg);
 
 public:
     imshow():it(nh) {
@@ -62,13 +62,14 @@ public:
         // ROS_INFO("size: %d", vec_rect_red.size());
         for (int i = 0;i < vec_rect_red.size();i++) {
             cv::rectangle(cv_ptr->image,vec_rect_red.at(i),cv::Scalar(255,255,0),10);
-            //cv::circle(cv_ptr->image,cv::Point2d(cv_ptr->image.cols/2,cv_ptr->image.rows/2),10,cv::Scalar(0,0,255),-1);
+            //cv::circle(cv_ptr->image,cv::Point2i(cv_ptr->image.cols/2,cv_ptr->image.rows/2),10,cv::Scalar(0,0,255),-1);
         }
         for (int i = 0;i < vec_rect_yellow.size();i++) {
             cv::rectangle(cv_ptr->image,vec_rect_yellow.at(i),cv::Scalar(255,0,0),10);
         }
         if ( (point_black.x != -1) || (point_black.y != -1)) {
-            cv::circle(cv_ptr->image,point_black,2,cv::Scalar(255,0,255),-1);
+            cv::circle(cv_ptr->image,point_black,2,cv::Scalar(0,255,0),1);
+            ROS_INFO("x:%d y:%d",point_black.x,point_black.y);
         }
         //ROS_INFO("red:  x: %d, y: %d, width: %d, height: %d",vec_rect_red.at(0).x,vec_rect_red[0].y,vec_rect_red[0].width,vec_rect_red[0].height);
         
@@ -118,7 +119,7 @@ void imshow::rect_array_red_callback(const ros_cutball::rectArray::ConstPtr& msg
 //TUDO将msg的时间戳加上，同步信息。
 
 //point_black在类中定义,将msg中的point的值赋值给point_black，最终在发布时绘制到图像上
-void imshow::point_black_callback(const ros_cutball::point2d::ConstPtr& msg) {
+void imshow::point_black_callback(const ros_cutball::point2i::ConstPtr& msg) {
     point_black.x = msg->x;
     point_black.y = msg->y;
 }
