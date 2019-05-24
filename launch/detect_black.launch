@@ -1,7 +1,8 @@
 <!--This launch file is used for controling part to test-->
 <launch>
- 
+    
     <arg name="test"   default="true"/>
+    <arg name="threshold"   default="20"/>
     <param name = "threshold" value="24"/>
     <group ns="zed">
         <include file="$(find zed_wrapper)/launch/zed_camera.launch">
@@ -9,14 +10,16 @@
     </group>
 
     <group ns="detect_black">
-        <node pkg="ros_cutball" name="detect_black" type="detect_black_node" args="yellow" output="screen"/>
+        <node pkg="ros_cutball" name="detect_black" type="detect_black_node" args="black" output="screen"/>
     </group>
 
     <node pkg="rqt_reconfigure" name="rqt_adjust" type="rqt_reconfigure" /> 
-    
+    <!-- <node name="dynamic_reconfigure_load" pkg="dynamic_reconfigure" type="dynparam" args="load /detect_black/detect_black $(find ros_cutball)/hsv_range.yaml" /> -->
+    <node pkg="dynamic_reconfigure" name="threshold_adjust" type="dynparam" args="set /detect_black/detect_black threshold $(arg threshold)" /> 
+
     <group if="$(arg test)">
         <node name="image_view_black" pkg="image_view" type="image_view" args="image:=/image_convert/black"/>
-        <node name="imshow" pkg="ros_cutball" type="Imshow" />
+        <node name="imshow" pkg="ros_cutball" type="Imshow" output="screen"/>
         <node name="image_view_raw" pkg="image_view" type="image_view" args="image:=/image_convert/Imshow" />
     <!-- stuff that will only be evaluated if foo is true -->
     </group>

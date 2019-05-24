@@ -40,7 +40,7 @@ public:
         image_sub_ = it.subscribe("/zed/rgb/image_raw_color", 1,&imshow::imageCallback,this);
         sub_yellow = nh.subscribe("/detect_color/detect_yellow/Detect_Color/rect/yellow", 10, &imshow::rect_array_yellow_callback,this);
         sub_red = nh.subscribe("/detect_color/detect_red/Detect_Color/rect/red", 10, &imshow::rect_array_red_callback,this);
-        sub_black = nh.subscribe("/detect_color/black_point", 10 , &imshow::point_black_callback,this);
+        sub_black = nh.subscribe("/detect_black/Detect_Color/black_point", 10 , &imshow::point_black_callback,this);
 
         nh.getParam("red_balloon",red_num);
         nh.getParam("yellow_balloon",yellow_num);
@@ -68,9 +68,10 @@ public:
             cv::rectangle(cv_ptr->image,vec_rect_yellow.at(i),cv::Scalar(255,0,0),10);
         }
         if ( (point_black.x != -1) || (point_black.y != -1)) {
-            cv::circle(cv_ptr->image,point_black,2,cv::Scalar(0,255,0),1);
-            ROS_INFO("x:%d y:%d",point_black.x,point_black.y);
+            cv::circle(cv_ptr->image,point_black,5,cv::Scalar(0,255,0),2);
+            //ROS_INFO("x:%d y:%d",point_black.x,point_black.y);
         }
+        
         //ROS_INFO("red:  x: %d, y: %d, width: %d, height: %d",vec_rect_red.at(0).x,vec_rect_red[0].y,vec_rect_red[0].width,vec_rect_red[0].height);
         
         image_pub_.publish(cv_ptr->toImageMsg());
