@@ -9,11 +9,17 @@ detect_falling::detect_falling(std::string parameter):it_(nh_) {
     srv_check = nh_.advertiseService("trigger",&detect_falling::checking_trigger,this);
     //初始化一些用于保存坐标点的vector
     //参数服务器获取超参数
-    nh_.getParam("red_balloon",red_num);
-    nh_.getParam("yellow_balloon",yellow_num);
-    nh_.getParam("weight_value",weight_value);
-    nh_.getParam("weight_point_num",weight_point_num);
-    nh_.getParam("queue_num",queue_num);
+    nh_.getParam("/detect_color/detect_red/red_balloon",red_num);
+    ROS_INFO("red_balloon_num: %d",red_num);
+    nh_.getParam("/detect_color/detect_yellow/yellow_balloon",yellow_num);
+    ROS_INFO("yellow_balloon_num: %d",yellow_num);
+    nh_.getParam("weight_value",weight_value);              //从中心点向外扩展的像素点值
+    nh_.getParam("weight_point_num",weight_point_num);      //取点的个数，默认为(weight_point_num+1)^2 默认为2
+    nh_.getParam("queue_num",queue_num);                    //队列最大存储深度的个数,即判断下落时取出首位
+    nh_.getParam("falling_threshold_m",falling_threshold_m);    //下落的阈值
+    nh_.getParam("falling_threshold_mm",falling_threshold_mm);    //下落的阈值
+    nh_.getParam("/zed/zed_wrapper_node/openni_depth_mode",openni_depth_mode);  //深度数值的单位。0是米为单位，1是毫米为单位
+    falling_threshold = openni_depth_mode? falling_threshold_mm:falling_threshold_m;
 
     if (parameter == std::string("test")) {
         test = true;
@@ -26,8 +32,14 @@ detect_falling::detect_falling(std::string parameter):it_(nh_) {
     } else {
         test = false;
     }
-    red_depth_queue_vec.resize(red_num+yellow_num);
-    yellow_depth_queue_vec.resize(red_num+yellow_num);
+    if (red_num > 0) {
+        vec_rect_red.resize(red_num);
+    }
+    if (yellow_num > 0) {
+        vec_rect_yellow.resize(yellow_num);
+    }
+    red_depth_queue_vec.resize(red_num);
+    yellow_depth_queue_vec.resize(yellow_num);
 
     tf_call[1] = false;
     tf_call[2] = false;
@@ -35,6 +47,7 @@ detect_falling::detect_falling(std::string parameter):it_(nh_) {
     tf_call[4] = false;
     time_decay = 0;
     start_checking = false;
+    height_queue.push(0);
 }
 
 
@@ -53,7 +66,7 @@ bool detect_falling::start() {
 //直接订阅深度图像，然后利用它的ptr直接读数据就行（因为不需要修改，所以不使用cv_bridge)
 //读取的目标点来自key_pixel_2d
 void detect_falling::depthCallback(const sensor_msgs::Image::ConstPtr& msg) {
-
+    ROS_INFO("depth_callback! in...");
     if (test) {
         // Get a pointer to the depth values casting the data
         // pointer to floating point
@@ -76,31 +89,39 @@ void detect_falling::depthCallback(const sensor_msgs::Image::ConstPtr& msg) {
         float* depths = (float*)(&msg->data[0]);                    //图像变为一位的全连接
         //红球深度装入队列
         for (int i = 0;i < red_key_pixel_2d.size();i++) {
-            float all_sum = 0; //深度之和
+            double all_sum = 0; //深度之和
             for (int j = 0;j < red_key_pixel_2d[i].size();j++) {
                 int u = red_key_pixel_2d[i][j].x;                   //横坐标
                 int v = msg->width * red_key_pixel_2d[i][j].y;      //纵坐标的所在的行
                 all_sum += depths[u+v];
             }
-            depth_push_into_queue(red_depth_queue_vec[i],all_sum/red_key_pixel_2d[i].size());     //all_sum除以这个向量point的个数，即平均值
+            if (red_key_pixel_2d[i].size()) {
+                ROS_INFO("red[%d]:size:%d,  value:%f ,all_sum:%lf",i,red_key_pixel_2d[i].size(),all_sum/red_key_pixel_2d[i].size(),all_sum);
+                depth_push_into_queue(red_depth_queue_vec[i],all_sum/red_key_pixel_2d[i].size());     //all_sum除以这个向量point的个数，即平均值
+            }
         }
         weighted_average_to_key_pixel(vec_rect_yellow,yellow_key_pixel_2d);
-
+        //ROS_INFO("Finish weight_average_to_key_pixel in depth_callback! out...");
         //黄球深度装入队列
         for (int i = 0;i < yellow_key_pixel_2d.size();i++) {
-            float all_sum = 0; //深度之和
+            double all_sum = 0; //深度之和
             for (int j = 0;j < yellow_key_pixel_2d[i].size();j++) {
                 int u = yellow_key_pixel_2d[i][j].x;                   //横坐标
                 int v = msg->width * yellow_key_pixel_2d[i][j].y;      //纵坐标的所在的行
                 all_sum += depths[u+v];
             }
-            depth_push_into_queue(yellow_depth_queue_vec[i],all_sum/yellow_key_pixel_2d[i].size());     //all_sum除以这个向量point的个数，即平均值
+            if(yellow_key_pixel_2d[i].size()) {
+                ROS_INFO("yellow:i : %d;  yellow_key_pixel_2d[i].size(): %d",i,yellow_key_pixel_2d[i].size());
+                ROS_INFO("yellow[%d]:size:%d,  value:%f ,all_sum:%lf,yellow_depth_queue_vec[i].size():%d",i,yellow_key_pixel_2d[i].size(),all_sum/yellow_key_pixel_2d[i].size(),all_sum,yellow_depth_queue_vec[i].size());
+                depth_push_into_queue(yellow_depth_queue_vec[i],all_sum/yellow_key_pixel_2d[i].size());     //all_sum除以这个向量point的个数，即平均值
+            }
         }
-
     }
+    ROS_INFO("depth_callback! out...");
 }
 
 void detect_falling::update_rect_red(const ros_cutball::rectArray::ConstPtr& msg) {
+    //ROS_INFO("update_rect_red! in...");
     vec_rect_red.resize(msg->rectarray.size());               //预分配大小，使用stl的vector一定要小心越界
     for (int i=0; i < msg->rectarray.size(); ++i)
     {
@@ -110,10 +131,12 @@ void detect_falling::update_rect_red(const ros_cutball::rectArray::ConstPtr& msg
         vec_rect_red[i].height = msg->rectarray[i].height;
         //vec_rect_red[i] = rect_temp;
     }
+    //ROS_INFO("update_rect_red! out...");
 }
 
 
 void detect_falling::update_rect_yellow(const ros_cutball::rectArray::ConstPtr& msg) {
+    //ROS_INFO("update_rect_yellow! in...");
     vec_rect_yellow.resize(msg->rectarray.size());               //预分配大小，使用stl的vector一定要小心越界
     for (int i=0; i < msg->rectarray.size(); ++i)
     {
@@ -123,6 +146,7 @@ void detect_falling::update_rect_yellow(const ros_cutball::rectArray::ConstPtr& 
         vec_rect_yellow[i].height = msg->rectarray[i].height;
         //vec_rect_yellow[i] = rect_temp;
     }
+    //ROS_INFO("update_rect_yellow! out...");
 }
 
 //飞机发布的高度信息，回调函数更改内部的height值。
@@ -163,23 +187,36 @@ bool detect_falling::call_service(int tf_num) {
     return true;
 }
 
-
+//先不使用复杂的取点了，先直接取框选的中心坐标方便调试
 void detect_falling::weighted_average_to_key_pixel(std::vector<cv::Rect>& rect_vec,std::vector<std::vector<cv::Point2i>>& vec_vec_point) {
-    vec_vec_point.resize(red_num+yellow_num);           //将二维数组先分配空间
+    // //ROS_INFO("weight_average_to_key_pixel! in...");
+    // vec_vec_point.resize(rect_vec.size());           //将二维数组先分配空间
+    // for (int i = 0;i < rect_vec.size();i++) {
+    //     int tempx = rect_vec[i].x;          //左上角坐标点
+    //     int tempy = rect_vec[i].y;
+    //     //ROS_INFO("weight_average_to_key_pixel! first loop...i= %d",i);
+    //     vec_vec_point[i].resize((weight_point_num+1)*(weight_point_num+1));
+    //     for (int j = 0;j < weight_point_num;j++) {
+    //         //ROS_INFO("weight_average_to_key_pixel! second loop...j= %d",j);
+    //         for (int k = 0;k < weight_point_num;k++) {
+    //             //ROS_INFO("weight_average_to_key_pixel! third loop...k= %d",k);
+    //             vec_vec_point[i][j] = cv::Point2i(tempx+j*weight_value+k*weight_value,tempy+j*weight_value+k*weight_value);      //TUDO 将待检测八个点放进二维数组中，判断下红黄球顺序这种问题
+    //         }
+    //     }
+    // }
+    // //ROS_INFO("weight_average_to_key_pixel! out...");
+    vec_vec_point.resize(rect_vec.size());
     for (int i = 0;i < rect_vec.size();i++) {
-        int tempx = rect_vec[i].x;          //左上角坐标点
-        int tempy = rect_vec[i].y;
-        vec_vec_point[i].resize((weight_point_num+1)*(weight_point_num+1));
-        for (int j = 0;j < weight_point_num;j++) {
-            for (int k = 0;k < weight_point_num;k++) {
-                vec_vec_point[i][j] = cv::Point2i(tempx+j*weight_value+k*weight_value,tempy+j*weight_value+k*weight_value);      //TUDO 将待检测八个点放进二维数组中，判断下红黄球顺序这种问题
-            }
-        }
+        vec_vec_point[i].resize(1);
+        vec_vec_point[i][0] = cv::Point2i(rect_vec[i].x+rect_vec[i].width/2,rect_vec[i].y+rect_vec[i].height/2);
     }
 }
 
 
 void detect_falling::depth_push_into_queue(std::queue<float>& depth_queue,float depth) {
+    ROS_INFO("depth_push_into_queue! in... empty:%d",depth_queue.empty());
+    depth_queue.size();
+    ROS_INFO("size de wen ti");
     if (depth_queue.size()>queue_num) {
         depth_queue.pop();
         depth_queue.push(depth);
@@ -187,6 +224,7 @@ void detect_falling::depth_push_into_queue(std::queue<float>& depth_queue,float 
     else {
         depth_queue.push(depth);
     }
+    ROS_INFO("depth_push_into_queue! out...");
 }
 
 
@@ -195,14 +233,17 @@ void detect_falling::depth_push_into_queue(std::queue<float>& depth_queue,float 
 //                  4
 //注意检测颜色时发布的气球顺序是y值由大到小，即y最大的在第四象限
 bool detect_falling::check_falling() {
+    //ROS_INFO("check_falling! in...");
     for (int i = 0;i < red_depth_queue_vec.size();i++) {
         double difference;
         //气球绝对高度差的变化，气球相对相机的距离变化，减去飞机相对地面的距离变化
         difference = abs(red_depth_queue_vec[i].front() - red_depth_queue_vec[i].back())-abs(height_queue.front()-height_queue.back());
+        ROS_INFO("depth_push_into_queue! red[%d] difference: %f",i,difference);
         if (difference > falling_threshold) {
             //计算出红球的象限，然后调用服务
             ros_cutball::TF tf;
             tf.request.tf = calculate_tf(vec_rect_red[i]);
+            ROS_INFO("red_falling tf:%d",tf.request.tf);
             if(srv_tf.call(tf)) {
                 reinitialize();                     //重新开启检测下落节点
             }
@@ -212,11 +253,13 @@ bool detect_falling::check_falling() {
             }
         }
     }
+    //ROS_INFO("depth_push_into_queue! after red_tf...");
     //接着写黄球的掉落检测
     for (int i = 0;i < yellow_depth_queue_vec.size();i++) {
         double difference;
         //气球绝对高度差的变化，气球相对相机的距离变化，减去飞机相对地面的距离变化
         difference = abs(yellow_depth_queue_vec[i].front() - yellow_depth_queue_vec[i].back())-abs(height_queue.front()-height_queue.back());
+        ROS_INFO("depth_push_into_queue! yellow[%d] difference: %f",i,difference);
         if (difference > falling_threshold) {
             //计算出红球的象限，然后调用服务
             ros_cutball::TF tf;
@@ -231,6 +274,7 @@ bool detect_falling::check_falling() {
                 case 4: tf.request.tf = 1;
                         break; 
             }
+            ROS_INFO("yellow_falling tf:%d",tf.request.tf);
             if(srv_tf.call(tf)) {
                 reinitialize();                     //重新开启检测下落节点
             }
@@ -240,11 +284,12 @@ bool detect_falling::check_falling() {
             }
         }
     }
+    //ROS_INFO("depth_push_into_queue! after yellow_difference... out...");
 }
 
 //输入一个点的坐标，先判断是不是最上或最下，再判断是不是最左或最右
 int detect_falling::calculate_tf(cv::Rect object) {
-    
+    ROS_INFO("calculate_tf! in...");
     std::vector<cv::Rect> four_rect;
     for (int i=0;i < vec_rect_red.size();i++) {
         four_rect.push_back(vec_rect_red[i]);
@@ -279,7 +324,7 @@ int detect_falling::calculate_tf(cv::Rect object) {
             ROS_INFO("an error occurs in calculate_tf(), where object has no tf number!");
         }
     }
-    
+    ROS_INFO("calculate_tf! out...");
 }
 
 

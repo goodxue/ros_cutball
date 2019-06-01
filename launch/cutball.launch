@@ -11,7 +11,7 @@
 
     <group ns="detect_color">
         <include file="$(find ros_cutball)/launch/detect_color.launch">
-            <arg name="test"    default="true" />
+            <arg name="test"    default="$(arg testing_model)" />
         </include>
     </group>
     

@@ -41,7 +41,10 @@ private:
     int red_num,yellow_num;                             //查看红色黄色球数量
     int queue_num;                                     //队列最大存储深度的个数,即判断下落时取出首位
     //double height;
-    double falling_threshold;                           //一定时间段内气球相对地面移动的距离阈值，超过即掉落
+    double falling_threshold;
+    double falling_threshold_m;                           //一定时间段内气球相对地面移动的距离阈值，超过即掉落
+    double falling_threshold_mm;                           //一定时间段内气球相对地面移动的距离阈值，超过即掉落
+    int openni_depth_mode;         //深度数值的单位。0是米为单位，1是毫米为单位
     bool test;
     std::vector<cv::Rect> vec_rect_red;                 //红色boundingbox
     std::vector<cv::Rect> vec_rect_yellow;              //黄色boundingbox

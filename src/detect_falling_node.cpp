@@ -3,7 +3,7 @@
 int main(int argc, char** argv)  {
     ros::init(argc, argv, "Detect_falling");
     ros::NodeHandle nh;
-    detect_falling DF("test");
+    detect_falling DF(" ");
 
 
     ros::Rate loop_rate(15);

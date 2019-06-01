@@ -5,6 +5,7 @@
     <group ns="detect_yellow">
         <node pkg="ros_cutball" name="detect_yellow" type="Detect_Color_node" args="yellow" output="screen"/>
         <!--参数列表 红球黄球个数（默认红球3个黄球1个) debug模式发布二值化图像，否则不发布 -->
+        <!-- 经过测试，气球个数的参数还是在这里改比较靠谱，写在其他文件里经常出问题，没那么多时间改这个了，先记着。 -->
         <param name="yellow_balloon" value="1"/>
     </group>
 
@@ -15,22 +16,25 @@
     </group>
 
     <group ns="detect_black">
-        <node pkg="ros_cutball" name="detect_black" type="detect_black_node" args="black" output="screen"/>
+        <node pkg="ros_cutball" name="detect_black" type="detect_black_node" args="black" output="screen">
         <!--参数列表 红球黄球个数（默认红球3个黄球1个) debug模式发布二值化图像，否则不发布 -->
+        <remap from="/detect_color/detect_black/Detect_Color/black_point" to="/detect_black/Detect_Color/black_point"/>
+        </node>
     </group>
 
-    <node pkg="rqt_reconfigure" name="rqt_adjust" type="rqt_reconfigure" /> 
+
 
     <!--node name="rviz" pkg="rviz" type="rviz" args="~/.rviz/detect_color.rviz"/-->
     
     <!--显示多个窗口，要么用rviz要么用image_view这个包-->
+    <node name="imshow" pkg="ros_cutball" type="Imshow" />
     <group if="$(arg test)">
-        <node name="image_view_yellow" pkg="image_view" type="image_view" args="image:=/image_convert/red"/>
-        <node name="image_view_red" pkg="image_view" type="image_view" args="image:=/image_convert/yellow"/>
+        <node name="image_view_red" pkg="image_view" type="image_view" args="image:=/image_convert/red"/>
+        <node name="image_view_yellow" pkg="image_view" type="image_view" args="image:=/image_convert/yellow"/>
         <node name="image_view_black" pkg="image_view" type="image_view" args="image:=/image_convert/black"/>
-        <node name="imshow" pkg="ros_cutball" type="Imshow" />
-        <node name="image_view_raw" pkg="image_view" type="image_view" args="image:=/image_convert/Imshow"/>
+        <node pkg="rqt_reconfigure" name="rqt_adjust" type="rqt_reconfigure" /> 
     <!-- stuff that will only be evaluated if foo is true -->
     </group>
+    <node name="image_view_raw" pkg="image_view" type="image_view" args="image:=/image_convert/Imshow"/>
 
 </launch>

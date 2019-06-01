@@ -1,7 +1,5 @@
-red_balloon: 1
-yellow_balloon: 1
 weight_value: 10
 weight_point_num: 2
 queue_num: 10
-
-
+falling_threshold_m: 0.1
+falling_threshold_mm: 50

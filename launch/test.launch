@@ -1,0 +1,16 @@
+<launch>
+   <group ns="zed">
+        <include file="$(find zed_wrapper)/launch/zed_camera.launch">
+        </include>
+    </group>
+
+<group ns="detect_yellow">
+        <node pkg="ros_cutball" name="detect_yellow" type="Detect_Color_node" args="yellow" output="screen"/>
+        <!--参数列表 红球黄球个数（默认红球3个黄球1个) debug模式发布二值化图像，否则不发布 -->
+    <param name="yellow_balloon" value="1"/>
+
+    </group>
+    <node pkg="rqt_reconfigure" name="rqt_adjust" type="rqt_reconfigure" /> 
+    <node name="imshow" pkg="ros_cutball" type="Imshow" />
+    <node name="image_view_yellow" pkg="image_view" type="image_view" args="image:=/image_convert/yellow"/>
+</launch>
