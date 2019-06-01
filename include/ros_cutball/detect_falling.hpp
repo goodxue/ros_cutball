@@ -28,7 +28,9 @@ private:
     
     ros::ServiceClient srv_tf;          //ros服务，客户端，当有气球下落则暂停继续监测，等待飞机返回原点后继续,这是一个#client#
     ros::ServiceServer srv_check;       //ros服务，服务端，客户端发出一个扳机，开启或者关闭深度的检测，用于飞机飞的平稳时发布一个信号，开始检测
-    
+    ros::ServiceClient call_update_howmany_red; //ros服务，客户端，气球下落后呼叫detect_color节点更新待检测气球数量。
+    ros::ServiceClient call_update_howmany_yellow;  //黄色的客户端
+
     void update_rect_red(const ros_cutball::rectArray::ConstPtr& msg);
     void update_rect_yellow(const ros_cutball::rectArray::ConstPtr& msg);       //更新红黄的boundingbox(用于确定气球上检测深度的几个点)
     void update_height(const std_msgs::Float64 Heights);                        //更新飞机当前高度

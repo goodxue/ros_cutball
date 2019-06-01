@@ -1,0 +1,9 @@
+<launch>
+
+    <group ns="detect_falling">
+        <node pkg="ros_cutball" name="detect_falling" type="detect_falling_node"  output="screen"/>
+    </group>
+
+    <node pkg="ros_cutball" name="services" type="Services_node"  output="screen"/>
+    
+</launch>

@@ -13,9 +13,7 @@
         <include file="$(find ros_cutball)/launch/detect_color.launch">
             <arg name="test"    default="$(arg testing_model)" />
         </include>
-    </group>
-    
-
+    </group>  
     
 
 </launch>
