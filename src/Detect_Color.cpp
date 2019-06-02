@@ -35,7 +35,7 @@ Detect_Color::Detect_Color(std::string Scolor,int Num_balloons):it_(nh_),scolor(
 
     //image_pub_ = it_.advertise("/image_converter/output_raw", 1);
     threshold_pub_ = it_.advertise(std::string("/image_convert/")+scolor,1);
-    counter_pub = nh_.advertise<ros_cutball::rectArray>(std::string("Detect_Color/rect/")+scolor,10);
+    counter_pub = nh_.advertise<ros_cutball::rectArray>(std::string("Detect_Color/rect/")+scolor,1);
     std::string scolor_temp = scolor + std::string("_balloon_fell");
     update_howmany = nh_.advertiseService(scolor_temp,&Detect_Color::Update_howmany,this);
     //TUDO后期添加两个服务的客户端，用于告诉这个服务气球下落减少检测的气球数

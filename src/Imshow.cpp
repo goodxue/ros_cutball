@@ -38,9 +38,9 @@ public:
     imshow():it(nh) {
         image_pub_ = it.advertise(std::string("/image_convert/Imshow"),1);
         image_sub_ = it.subscribe("/zed/rgb/image_raw_color", 1,&imshow::imageCallback,this);
-        sub_yellow = nh.subscribe("/detect_color/detect_yellow/Detect_Color/rect/yellow", 10, &imshow::rect_array_yellow_callback,this);
-        sub_red = nh.subscribe("/detect_color/detect_red/Detect_Color/rect/red", 10, &imshow::rect_array_red_callback,this);
-        sub_black = nh.subscribe("/detect_black/Detect_Color/black_point", 10 , &imshow::point_black_callback,this);
+        sub_yellow = nh.subscribe("/detect_color/detect_yellow/Detect_Color/rect/yellow", 1, &imshow::rect_array_yellow_callback,this);
+        sub_red = nh.subscribe("/detect_color/detect_red/Detect_Color/rect/red", 1, &imshow::rect_array_red_callback,this);
+        sub_black = nh.subscribe("/detect_black/Detect_Color/black_point", 1 , &imshow::point_black_callback,this);
 
         nh.getParam("red_balloon",red_num);
         nh.getParam("yellow_balloon",yellow_num);

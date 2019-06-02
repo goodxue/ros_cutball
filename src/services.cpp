@@ -11,9 +11,9 @@ bool TF_callback(ros_cutball::TF::Request  &req,
          ros_cutball::TF::Response &res)
 {
   ROS_INFO_STREAM("TF recieved: ["<<req.tf<<"],holding... press 'g' to continue...");
-  for(int i=0;i < 2;i++) {
-    ros::Duration(2).sleep();
-    ROS_INFO("pause %d s to restart...",6-2*i);
+  for(int i=0;i < 4;i++) {
+    ros::Duration(1).sleep();
+    ROS_INFO("pause %d s to restart...",4-i);
   }
   ROS_INFO("continue... return to detect_falling...");
   return true;

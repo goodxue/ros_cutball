@@ -13,7 +13,7 @@ detect_black::detect_black():it_(nh_){
     //dynamic_reconfigure::Server<ros_cutball::hsv_Config> server;
     
     //server.setCallback(f);
-    point_pub = nh_.advertise<ros_cutball::point2i>(std::string("Detect_Color/black_point"),10);
+    point_pub = nh_.advertise<ros_cutball::point2i>(std::string("Detect_Color/black_point"),1);
     nh_.getParam(std::string("threshold"),threshold);
     //cv::namedWindow("test");
 }

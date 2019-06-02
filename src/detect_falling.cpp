@@ -8,7 +8,7 @@ detect_falling::detect_falling(std::string parameter):it_(nh_) {
     srv_tf = nh_.serviceClient<ros_cutball::TF>("/balloon_falling");
     srv_check = nh_.advertiseService("trigger",&detect_falling::checking_trigger,this);
     call_update_howmany_red = nh_.serviceClient<std_srvs::Trigger>("/detect_color/detect_red/red_balloon_fell");
-    call_update_howmany_yellow = nh_.serviceClient<std_srvs::Trigger>("/detect_color/detect_red/yellow_balloon_fell");
+    call_update_howmany_yellow = nh_.serviceClient<std_srvs::Trigger>("/detect_color/detect_yellow/yellow_balloon_fell");
     //初始化一些用于保存坐标点的vector
     //参数服务器获取超参数
     nh_.getParam("/detect_color/detect_red/red_balloon",red_num);
@@ -123,6 +123,7 @@ void detect_falling::depthCallback(const sensor_msgs::Image::ConstPtr& msg) {
 }
 
 void detect_falling::update_rect_red(const ros_cutball::rectArray::ConstPtr& msg) {
+    if (!red_num) return;       //当需检测的红球为零时直接返回
     //ROS_INFO("update_rect_red! in...");
     vec_rect_red.resize(msg->rectarray.size());               //预分配大小，使用stl的vector一定要小心越界
     for (int i=0; i < msg->rectarray.size(); ++i)
@@ -138,6 +139,7 @@ void detect_falling::update_rect_red(const ros_cutball::rectArray::ConstPtr& msg
 
 
 void detect_falling::update_rect_yellow(const ros_cutball::rectArray::ConstPtr& msg) {
+    if (!yellow_num) return;       //为了处理虽然重新初始化(reinit)时将气球数量减小到0，但是还会有空数组发过来，影响坐标的判断。
     //ROS_INFO("update_rect_yellow! in...");
     vec_rect_yellow.resize(msg->rectarray.size());               //预分配大小，使用stl的vector一定要小心越界
     for (int i=0; i < msg->rectarray.size(); ++i)
@@ -218,6 +220,7 @@ void detect_falling::weighted_average_to_key_pixel(std::vector<cv::Rect>& rect_v
 void detect_falling::depth_push_into_queue(std::queue<float>& depth_queue,float depth) {
     //ROS_INFO("depth_push_into_queue! in... empty:%d",depth_queue.empty());
     if (std::isnan(depth)) return;
+    if (std::isinf(depth)) return;
     //ROS_INFO("size de wen ti");
     if (depth_queue.size()>queue_num) {
         depth_queue.pop();
@@ -239,7 +242,7 @@ bool detect_falling::check_falling() {
     for (int i = 0;i < red_depth_queue_vec.size();i++) {
         float difference;
         //气球绝对高度差的变化，气球相对相机的距离变化，减去飞机相对地面的距离变化
-        difference = abs(abs(red_depth_queue_vec[i].front() - red_depth_queue_vec[i].back())-abs(height_queue.front()-height_queue.back()));
+        difference = fabs(fabs(red_depth_queue_vec[i].front() - red_depth_queue_vec[i].back())-fabs(height_queue.front()-height_queue.back()));
         ROS_INFO(" red[%d] difference: %f ;front:[%f],back:[%f]",i,difference,red_depth_queue_vec[i].front(),red_depth_queue_vec[i].back());
         if (difference > falling_threshold) {
             //计算出红球的象限，然后调用服务
@@ -267,7 +270,7 @@ bool detect_falling::check_falling() {
     for (int i = 0;i < yellow_depth_queue_vec.size();i++) {
         float difference;
         //气球绝对高度差的变化，气球相对相机的距离变化，减去飞机相对地面的距离变化
-        difference = abs(abs(yellow_depth_queue_vec[i].front() - yellow_depth_queue_vec[i].back())-abs(height_queue.front()-height_queue.back()));
+        difference = fabs(fabs(yellow_depth_queue_vec[i].front() - yellow_depth_queue_vec[i].back())-fabs(height_queue.front()-height_queue.back()));
         ROS_INFO("yellow[%d] difference: %f ;fro:[%f],back:[%f]",i,difference,yellow_depth_queue_vec[i].front(),yellow_depth_queue_vec[i].back());
         if (difference > falling_threshold) {
             //计算出红球的象限，然后调用服务
@@ -304,7 +307,7 @@ bool detect_falling::check_falling() {
 }
 
 //输入一个点的坐标，先判断是不是最上或最下，再判断是不是最左或最右
-int detect_falling::calculate_tf(cv::Rect object) {
+int detect_falling::calculate_tf(cv::Rect object) {     //*命名错误，应该是首次有四个气球，后面就不是了，后续修改*
     ROS_INFO("calculate_tf! in...");
     std::vector<cv::Rect> four_rect;
     for (int i=0;i < vec_rect_red.size();i++) {
@@ -313,34 +316,50 @@ int detect_falling::calculate_tf(cv::Rect object) {
     for (int i=0;i < vec_rect_yellow.size();i++) {
         four_rect.push_back(vec_rect_yellow[i]);
     }
-    while (four_rect.size() < 4) {          //确保里面有四个，这样才便于划分象限
-        four_rect.push_back(cv::Rect());
-    }
+    // while (four_rect.size() < 4) {          //确保里面有四个，这样才便于划分象限
+    //     four_rect.push_back(cv::Rect());
+    // }
 
     std::sort(four_rect.begin(),four_rect.end(),comp_rect_x);
-    if ((*four_rect.begin()) == object && (!tf_call[3])) {
+    if (*(four_rect.begin()) == object && (!tf_call[3])) {
         tf_call[3] = true;
+        for (int i=0;i < four_rect.size();i++) {
+                ROS_INFO("four_rect[%d]: x : %d, y: %d",i,four_rect[i].x,four_rect[i].y);
+            }
         return 3;
     }
-    else if ((*four_rect.end()) == object && (!tf_call[2])) {
+    else if (*(four_rect.end()-1) == object && (!tf_call[2])) {
         tf_call[2] = true;
+        for (int i=0;i < four_rect.size();i++) {
+                ROS_INFO("four_rect[%d]: x : %d, y: %d",i,four_rect[i].x,four_rect[i].y);
+            }
         return 2;
     }
     else {
         std::sort(four_rect.begin(),four_rect.end(),comp_rect_y);
-        if ((*four_rect.begin()) == object && (!tf_call[4])) {
+        if (*(four_rect.begin()) == object && (!tf_call[4])) {
             tf_call[4] = true;
+            for (int i=0;i < four_rect.size();i++) {
+                ROS_INFO("four_rect[%d]: x : %d, y: %d",i,four_rect[i].x,four_rect[i].y);
+            }
             return 4;
         }
-        else if ((*four_rect.end()) == object && (!tf_call[1])) {
+        else if (*(four_rect.end()-1) == object && (!tf_call[1])) {
             tf_call[1] = true;
+            for (int i=0;i < four_rect.size();i++) {
+                ROS_INFO("four_rect[%d]: x : %d, y: %d",i,four_rect[i].x,four_rect[i].y);
+            }
             return 1;
         }
         else {
-            ROS_WARN("an error occurs in calculate_tf(), where object has no tf number!");
+            ROS_ERROR("an error occurs in calculate_tf(), where object has no tf number!");
+            for (int i=0;i < four_rect.size();i++) {
+                ROS_INFO("four_rect[%d]: x : %d, y: %d",i,four_rect[i].x,four_rect[i].y);
+            }
         }
     }
     ROS_INFO("calculate_tf! out...");
+    return 0;
 }
 
 
@@ -354,17 +373,19 @@ bool comp_rect_x(cv::Rect& rect1,cv::Rect& rect2) {
 
 //很大可能出问题,先马上
 bool detect_falling::reinitialize() {
+    ROS_INFO("reinitializing node...");
     nh_.getParam("/detect_color/detect_red/red_balloon",red_num);
     nh_.getParam("/detect_color/detect_yellow/yellow_balloon",yellow_num);
     nh_.getParam("weight_value",weight_value);
     nh_.getParam("weight_point_num",weight_point_num);
     nh_.getParam("queue_num",queue_num);
-    red_depth_queue_vec.clear();
-    yellow_depth_queue_vec.clear();
-    red_depth_queue_vec.resize(red_num);
-    yellow_depth_queue_vec.resize(yellow_num);
+    vec_rect_red.resize(0);
+    vec_rect_yellow.resize(0);
+    red_depth_queue_vec.assign(red_num,std::queue<float>());        //清空两个记录深度的队列数据
+    yellow_depth_queue_vec.assign(yellow_num,std::queue<float>());
     start_checking = false;                             //注意要将开始下落检测设置为false
     time_decay = 0;
+    ROS_INFO("reinitialized successfully...");
 }
 
 //服务扳机的回调函数，将布尔值取反
