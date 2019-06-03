@@ -8,7 +8,7 @@ For a compitation named *Air Robot Cut Fruit* in [*RoboCup China Open*](http://w
 
 ## Dependence
 The ros_cutball is a catkin package. It depends on the following ROS packages:
-* cv_bridgr
+* cv_bridge
 * zed-ros-wrapper
 * image_transport
 * sensor_msgs
@@ -20,3 +20,5 @@ The ros_cutball is a catkin package. It depends on the following ROS packages:
 * ZED SDK ≥ 2.3 and its dependency CUDA
 * ROS Kinetic
 
+## Contribute!
+It's my first ros project. Star this repository if you like, and it will be very generous of you!
