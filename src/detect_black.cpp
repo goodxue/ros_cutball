@@ -1,3 +1,17 @@
+/*
+* @file detect_black.cpp
+* @brief TUDO
+* @author Weipeng.Xue  <goodxue@gmail.com>
+* @version 1.0.0
+*
+************************************************
+*
+* Copyright (c) 2019 Weipeng.Xue.
+*
+* All rights reserved.
+*
+************************************************
+*/
 #include "detect_black.hpp"
 bool comp_area(cv::Rect& Rect1,cv::Rect& Rect2)
 {

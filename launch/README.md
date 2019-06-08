@@ -5,3 +5,6 @@
 <node pkg="dynamic_reconfigure" name="threshold_adjust" type="dynparam" args="set /detect_black/detect_black threshold $(arg threshold)" />
 ```
 可以在启动黑圆检测节点时手动输入一个arg改变阈值，更好的方法后面继续探索
+
+## Update
+已解决，需要手动启动一个roscore即可，动态参数配置会自动使用roscore中已存在的参数值作为初始值。具体参考我的github博客中的文档。

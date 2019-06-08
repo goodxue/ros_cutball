@@ -11,11 +11,10 @@ For a compitation named *Air Robot Cut Fruit* in [*RoboCup China Open*](http://w
 
 When a balloon falls, the program can immediately checks out and output it's quadrant. It's designed like:
 
-<center> 1</center>
-<br>
-<center>2   &nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp 3</center>
-<br>
-<center>4</center>
+&emsp;| 1 |&emsp;
+:-:|:-:|:-:
+2| &emsp; |3
+&emsp;|4|&emsp;
 
 
 If the yellow one falls, outputing the opisite quadrant.

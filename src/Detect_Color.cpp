@@ -1,3 +1,17 @@
+/*
+* @file Detect_Color.cpp
+* @brief TUDO
+* @author Weipeng.Xue  <goodxue@gmail.com>
+* @version 1.0.0
+*
+************************************************
+*
+* Copyright (c) 2019 Weipeng.Xue.
+*
+* All rights reserved.
+*
+************************************************
+*/
 #include "Detect_Color.hpp"
 
 //TUDO后面再修改，辅助函数【全局】

@@ -1,3 +1,17 @@
+/*
+* @file detect_black.hpp
+* @brief TUDO
+* @author Weipeng.Xue  <goodxue@gmail.com>
+* @version 1.0.0
+*
+************************************************
+*
+* Copyright (c) 2019 Weipeng.Xue.
+*
+* All rights reserved.
+*
+************************************************
+*/
 #include <opencv2/opencv.hpp>
 #include <sl_zed/Camera.hpp>
 #include <ros/ros.h>
