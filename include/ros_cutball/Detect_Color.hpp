@@ -1,7 +1,7 @@
 /*
 * @file Detect_Color.hpp
 * @brief TUDO
-* @author Weipeng.Xue  <goodxue@gmail.com>
+* @author Weipeng.Xue  <xuedplay@gmail.com>
 * @version 1.0.0
 *
 ************************************************
