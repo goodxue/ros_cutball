@@ -15,5 +15,6 @@
         </include>
     </group>  
     
+    <include file="$(find ros_cutball)/launch/detect_falling.launch"/>
 
 </launch>

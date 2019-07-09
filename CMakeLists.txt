@@ -145,9 +145,11 @@ catkin_package(
   add_executable(detect_black_node src/detect_black_node.cpp src/detect_black.cpp)
   add_executable(Imshow src/Imshow.cpp )
   add_executable(Services_node src/services.cpp )
+  add_executable(msg_bridge src/msg_bridge.cpp )
   # add_executable(msg_bridge src/msg_bridge.cpp )
   # add_executable(test_node src/test_node.cpp )
   add_executable(detect_falling_node src/detect_falling_node.cpp src/detect_falling.cpp)
+  target_link_libraries(msg_bridge ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
   target_link_libraries(Detect_Color_node ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
   target_link_libraries(Imshow ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
   target_link_libraries(Services_node ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
@@ -155,6 +157,11 @@ catkin_package(
   # target_link_libraries(test_node ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
   target_link_libraries(detect_black_node ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
   target_link_libraries(detect_falling_node ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+  add_dependencies(detect_black_node ${${PROJECT_NAME}_EXPORTED_TARGETS})
+  add_dependencies(Imshow ${${PROJECT_NAME}_EXPORTED_TARGETS})
+  add_dependencies(Services_node ${${PROJECT_NAME}_EXPORTED_TARGETS})
+  add_dependencies(msg_bridge ${${PROJECT_NAME}_EXPORTED_TARGETS})
+  add_dependencies(detect_falling_node ${${PROJECT_NAME}_EXPORTED_TARGETS})
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
 ## target back to the shorter version for ease of user use

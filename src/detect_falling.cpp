@@ -169,6 +169,8 @@ void detect_falling::update_rect_yellow(const ros_cutball::rectArray::ConstPtr& 
 
 //飞机发布的高度信息，回调函数更改内部的height值。
 void detect_falling::update_height(const std_msgs::Float64 Heights) {
+    if (std::isnan(Heights.data)) return;
+    if (std::isinf(Heights.data)) return;
     if (height_queue.size() >= queue_num) {
         height_queue.pop();
         height_queue.push(Heights.data);
@@ -404,7 +406,12 @@ bool detect_falling::reinitialize() {
 
 //服务扳机的回调函数，将布尔值取反
 bool detect_falling::checking_trigger(std_srvs::Trigger::Request& req,std_srvs::Trigger::Response& res) {
+    ROS_INFO("Trigger received. Starting check_falling.");
     start_checking = !start_checking;
     res.success = true;
+    res.message = std::string("");
+    if (start_checking == false) {
+        ROS_WARN("warning: setting start_checking from true to false. Which will cause falling_detection deactivated.");
+    }
     return true;
 }

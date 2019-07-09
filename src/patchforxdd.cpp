@@ -1,7 +1,7 @@
 /*
 * @file patchforxdd.cpp
 * @brief This code is building for a programming problem that xdd can't make a service that controling part to call 'detect_falling
-    triger'. So I made this to receive his topic and call the 'triger' when the time is appropriate.
+    triger'. So I made this to receive his topic and call the 'triger' when the time is appropriate.    UPDATE:NO LONGER USED.
 * @author Weipeng.Xue  <goodxue@gmail.com>
 * @version 1.0.0
 *
@@ -14,6 +14,7 @@
 ************************************************
 */
 
+//******************************UNUSED******************************
 #include <opencv2/opencv.hpp>
 #include <sl_zed/Camera.hpp>
 #include <ros/ros.h>
